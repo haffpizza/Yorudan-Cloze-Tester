@@ -29,7 +29,7 @@ Windows, Mac, and Linux builds are provided. If you would like to use YCT on a d
 * spacy + en_core_web_sm
 * fugashi
 * unidic-lite
-2) Find the directory for unidic_lite (required if using for Japanese) using:
+2) Find the directory for unidic_lite (required for Japanese) using:
 > python -c "import unidic_lite, pathlib; print(pathlib.Path(unidic_lite.__file__).parent)"
 3) Then, plug the path given into the following command:
 > pyinstaller YCT.py --windowed --onefile --add-data "COPYPATHHERE;unidic_lite"
