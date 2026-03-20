@@ -29,8 +29,9 @@ Windows, Mac, and Linux builds are provided. If you would like to use YCT on a d
 * spacy + en_core_web_sm
 * fugashi
 * unidic-lite
-2) Find the directory for unidic_lite (required for Japanese sentence parsing) using:
+2) Find the directory for unidic_lite (required if using for Japanese) using:
 > python -c "import unidic_lite, pathlib; print(pathlib.Path(unidic_lite.__file__).parent)"
 3) Then, plug the path given into the following command:
 > pyinstaller YCT.py --windowed --onefile --add-data "COPYPATHHERE;unidic_lite"
 4) All other libraries will be automatically included.
+5) Download [libmpv-2.dll](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/) and place it next to the executable. Alternatively, you can place it in PATH, but it will not be built into the executable.
