@@ -17,7 +17,7 @@ Windows, Mac, and Linux builds are provided. If you would like to use YCT on a d
 ## Notes:
 1) Proper nouns, punctuation, and most onomatopoeia will not be selected for testing.
 2) Anything contained within parentheses or brackets will not be selected and will not be shown.
-3) If your subtitles are not in .srt format, you can easily convert them using [Subtitle Edit](https://github.com/SubtitleEdit/subtitleedit)
+3) If your subtitles are not in .srt format, you can easily convert them using [Subtitle Edit](https://github.com/SubtitleEdit/subtitleedit).
 4) If you are seeing clips that are too short or too easy, you might want to try deleting them from the subtitle file. You can easily do this using Subtitle Edit.
 > To quickly find the shortest subtitle lines using Subtitle Edit, go to Tools, Sort by, and then select either Duration or Text - total length.
 
