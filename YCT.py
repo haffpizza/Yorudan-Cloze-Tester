@@ -412,6 +412,9 @@ def _tokenise_japanese(text: str) -> list[_Token]:
             _tokenise_japanese._tagger = False
             tagger = False
 
+    EXCLUDE_STRINGS = {"あ", "フ", "か", "だ", "よ", "ね", "し", "て", "が", "は", "の", "に", "っ", "た", "ッ", "る", "な", "ん"} #prevent these strings from being selected
+    BANNED_CHARS = {"～", "￥"} #strings containing any of these characters will not be selected
+    
     if tagger:
         tokens = []
         offset = 0
@@ -429,6 +432,8 @@ def _tokenise_japanese(text: str) -> list[_Token]:
                 and not is_proper
                 and not surface.isspace()
                 and len(surface) > 0
+                and surface not in EXCLUDE_STRINGS
+                and not any(c in BANNED_CHARS for c in surface)
                 and not (
                     len(surface) <= 2
                     and re.fullmatch(r"[\u3040-\u309f]+", surface)
