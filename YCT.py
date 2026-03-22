@@ -398,6 +398,24 @@ def _get_fugashi_tagger():
     # Running from .py — let fugashi locate the dictionary itself
     return fugashi.Tagger()
 
+def load_excluded(filepath, mode="line"):
+    excluded = set()
+    with open(filepath, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+
+            if not line or line.startswith("#"):
+                continue
+
+            if "#" in line:
+                line = line.split("#", 1)[0].strip()
+
+            if mode == "line":
+                excluded.add(line)
+            elif mode == "char":
+                excluded.update(line)
+
+    return excluded
 
 def _tokenise_japanese(text: str) -> list[_Token]:
     tagger = getattr(_tokenise_japanese, "_tagger", None)
@@ -412,8 +430,8 @@ def _tokenise_japanese(text: str) -> list[_Token]:
             _tokenise_japanese._tagger = False
             tagger = False
 
-    EXCLUDE_STRINGS = {"あ", "フ", "か", "だ", "よ", "ね", "し", "て", "が", "は", "の", "に", "っ", "た", "ッ", "る", "な", "ん"} #prevent these strings from being selected
-    BANNED_CHARS = {"～", "￥"} #strings containing any of these characters will not be selected
+    EXCLUDE_STRINGS = load_excluded("excluded_strings.txt", mode="line")
+    BANNED_CHARS = load_excluded("excluded_chars.txt", mode="line")
     
     if tagger:
         tokens = []
@@ -858,6 +876,13 @@ class QuizView(QWidget):
         self.cloze_label.setMinimumHeight(72)
         self.cloze_label.setTextFormat(Qt.RichText)
         blay.addWidget(self.cloze_label)
+        
+        # Source info label (visible only during _PHASE_RESULT)
+        self.source_label = QLabel("")
+        self.source_label.setAlignment(Qt.AlignCenter)
+        self.source_label.setStyleSheet(f"color: {TEXT_DIM}; font-size: 11px;")
+        self.source_label.hide()
+        blay.addWidget(self.source_label)
 
         # Answer input row (visible only during _PHASE_CLOZE)
         self.answer_input = QLineEdit()
@@ -984,6 +1009,7 @@ class QuizView(QWidget):
             self.answer_input.hide()
             self.answer_input.clear()
             self.result_label.setText("")
+            self.source_label.hide()
 
         elif phase == _PHASE_CLOZE:
             # Show cloze, reveal input box
@@ -995,10 +1021,21 @@ class QuizView(QWidget):
             self.answer_input.setFocus()
             self.result_label.setText("")
             self.player.stop()   # no replay during answer phase
+            self.source_label.hide()
 
         elif phase == _PHASE_RESULT:
             # Full subtitle shown, feedback shown, replay re-enabled
             self.answer_input.hide()
+            if self._current_pair and self._current_entry:
+                ms = self._current_entry.start_ms
+                h, rem = divmod(ms, 3_600_000)
+                m, rem = divmod(rem, 60_000)
+                s, ms_ = divmod(rem, 1_000)
+                ts = f"{h:02d}:{m:02d}:{s:02d}.{ms_:03d}"
+                self.source_label.setText(
+                    f"{self._current_pair.video_path.name}  ·  {ts}"
+                )
+                self.source_label.show()
 
     # ------------------------------------------------------------------
     # Input handlers
