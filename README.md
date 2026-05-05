@@ -4,9 +4,9 @@ Desktop app for quickly generating [cloze tests](https://en.wikipedia.org/wiki/C
 Windows, Mac, and Linux builds are provided. If you would like to use YCT on a different platform, or if the provided build is not working on your system, it is recommended that you build the executable yourself (instructions are provided below).
 ## To start:
 1) Place all files in the same folder and run YCT.exe. If you have an older computer, it might take 10 or more seconds to start.
-2) Select a folder which contains video files and corresponding subtitle files.
-3) To ensure that the video and subtitle files are paired correctly, make sure that they have the same name (example: episode1.mp4 + episode1.srt). There is not a limit to the number of files that YCT can select from.
-4) Select the language of the videos you loaded. YCT officially supports Japanese and English, but it could be used for any language using the Roman alphabet.
+2) Select a folder which contains video files and corresponding subtitle files. To ensure that the video and subtitle files are paired correctly, make sure that they have the same name (example: episode1.mp4 + episode1.srt). There is not a limit to the number of files that YCT can select from.
+> If you have image-based subtitles in .sup format, you can also place those in the folder and they will be shown in the video player after answering a question. This is useful if you converted subtitles from image (.sup) to text (.srt) using an OCR and want to review them.
+3) Select the language of the videos you loaded. YCT officially supports Japanese and English, but it could be used for any language using the Roman alphabet.
 
 ## Test:
 1) Once the videos and subtitles are loaded, a subtitle will be selected at random and its corresponding video will automatically play. You can pad the start and end of clips using the arrow keys at the bottom of the window (0-5000 milliseconds).
@@ -45,5 +45,5 @@ In both cases, subtitles containing these characters may still be selected even 
 `pyinstaller YCT.py --windowed --onefile --add-data "COPYPATHHERE;unidic_lite"`
 
 5) All other libraries will be automatically included.
-6) Download [libmpv-2.dll](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/) and place it next to the executable. Alternatively, you can place it in PATH, but it will not be built into the executable.
+6) Download [libmpv-2.dll](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/) and place it next to the executable. Alternatively, you can place it in PATH, but doing so will not cause it to be built into the executable.
 7) Don't forget to also place the two .txt files next to the executable.
