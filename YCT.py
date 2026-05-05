@@ -72,13 +72,6 @@ QMainWindow, QWidget {{
     background: {PANEL_BG};
     border-bottom: 1px solid {BORDER};
 }}
-#appTitle {{
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: bold;
-    color: {ACCENT};
-    letter-spacing: 3px;
-}}
 #scoreLabel {{
     color: {TEXT_DIM};
     font-size: 13px;
@@ -635,8 +628,10 @@ class MpvWidget(QWidget):
                 hr_seek=True,       #high-resolution seek
                 terminal=False,
                 really_quiet=True,
-                sid=False,       # disable subtitles
-                loop=False,      # no looping
+                sub_auto="no", # do not auto-load any subtitles
+                sid="no",          # no active subtitle track
+                sub_visibility=False, # start subtitles hidden
+                loop=False,      # no automatic video looping
             )
             self._player.observe_property("pause", self._on_eof)
         except Exception as e:
@@ -658,6 +653,21 @@ class MpvWidget(QWidget):
         self._player["start"] = f"{start_ms / 1000:.3f}"
         self._player["end"]   = f"{end_ms / 1000:.3f}"
         self._player.play(video_path)
+        
+        #Remove any existing subtitle tracks
+        try:
+            self._player.command("sub-remove", "all")
+        except Exception:
+            pass
+        
+        # Explicitly load matching .sup if present
+        sup_path = Path(video_path).with_suffix(".sup")
+        if sup_path.exists():
+                try:
+                    self._player.command("sub-add", str(sup_path))
+                    self._player.sid = -1 # select only the newly added track
+                except Exception:
+                    pass
         self._player.pause = False  # clear any EOF-induced pause before loading
 
     def stop(self):
@@ -675,6 +685,14 @@ class MpvWidget(QWidget):
                 pass
             self._player = None
         super().closeEvent(event)
+
+    def show_subtitles(self):
+        if self._player:
+            self._player.sub_visibility = True
+
+    def hide_subtitles(self):
+        if self._player:
+            self._player.sub_visibility = False
 
 
 # ===========================================================================
@@ -1010,6 +1028,7 @@ class QuizView(QWidget):
             self.answer_input.clear()
             self.result_label.setText("")
             self.source_label.hide()
+            self.player.hide_subtitles()
 
         elif phase == _PHASE_CLOZE:
             # Show cloze, reveal input box
@@ -1022,9 +1041,11 @@ class QuizView(QWidget):
             self.result_label.setText("")
             self.player.stop()   # no replay during answer phase
             self.source_label.hide()
+            self.player.hide_subtitles()
 
         elif phase == _PHASE_RESULT:
             # Full subtitle shown, feedback shown, replay re-enabled
+            self.player.show_subtitles()
             self.answer_input.hide()
             if self._current_pair and self._current_entry:
                 ms = self._current_entry.start_ms
@@ -1168,17 +1189,6 @@ class MainWindow(QMainWindow):
         root = QVBoxLayout(central)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
-
-        # Header
-        header = QWidget()
-        header.setObjectName("header")
-        header.setFixedHeight(52)
-        hlay = QHBoxLayout(header)
-        hlay.setContentsMargins(18, 0, 18, 0)
-        title = QLabel("YORUDAN CLOZE TESTER")
-        title.setObjectName("appTitle")
-        hlay.addWidget(title)
-        root.addWidget(header)
 
         # Quiz view fills the window
         self.quiz = QuizView(self.history, self)
