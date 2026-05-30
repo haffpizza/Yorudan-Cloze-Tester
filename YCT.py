@@ -39,7 +39,7 @@ _find_libmpv()
 import mpv
 import regex
 from PySide6.QtCore import Qt, QTimer, Signal, Slot
-from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
+from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut, QIcon
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
     QLineEdit, QMainWindow, QPushButton, QSizePolicy,
@@ -167,6 +167,13 @@ def apply_palette(target):
     pal.setColor(QPalette.HighlightedText, QColor(DARK_BG))
     target.setPalette(pal)
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # ===========================================================================
 # SRT parser
@@ -522,17 +529,15 @@ def check_answer(user_input: str, result: ClozeResult) -> bool:
 # History / persistence
 # ===========================================================================
 
-def _data_dir() -> Path:
-    if sys.platform == "win32":
-        base = Path(os.environ.get("APPDATA", Path.home()))
-    else:
-        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
-    d = base / "YorudanClozeTester"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+def _app_dir() -> Path:
+    # executable folder
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
 
+    # Running from source
+    return Path(__file__).resolve().parent
 
-HISTORY_FILE = _data_dir() / "history.json"
+HISTORY_FILE = _app_dir() / "history.json"
 
 
 @dataclass
@@ -893,6 +898,10 @@ class QuizView(QWidget):
         self.cloze_label.setAlignment(Qt.AlignCenter)
         self.cloze_label.setMinimumHeight(72)
         self.cloze_label.setTextFormat(Qt.RichText)
+        self.cloze_label.setTextInteractionFlags(
+            Qt.TextSelectableByMouse |
+            Qt.TextSelectableByKeyboard
+        )
         blay.addWidget(self.cloze_label)
         
         # Source info label (visible only during _PHASE_RESULT)
@@ -1175,6 +1184,7 @@ class QuizView(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setWindowIcon(QIcon(resource_path("assets/icon.png")))
         self.setWindowTitle("Yorudan Cloze Tester")
         self.resize(900, 640)
         self.setMinimumSize(700, 500)
@@ -1218,6 +1228,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationName("Yorudan Cloze Tester")
+    app.setWindowIcon(QIcon(resource_path("assets/icon.png")))
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
