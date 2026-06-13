@@ -514,15 +514,25 @@ def make_cloze(text: str, seed: int | None = None, language: str | None = None) 
         blank=blank,
     )
 
+def kata_to_hira(text: str) -> str:
+    result = []
+    for ch in text:
+        code = ord(ch)
+        # Katakana → Hiragana
+        if 0x30A1 <= code <= 0x30F6:
+            result.append(chr(code - 0x60))
+        else:
+            result.append(ch)
+    return "".join(result)
+
+
+def normalize_answer(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text).strip().lower()
+    text = kata_to_hira(text)
+    return text
 
 def check_answer(user_input: str, result: ClozeResult) -> bool:
-    a = user_input.strip()
-    t = result.target_word
-    if a.lower() == t.lower():
-        return True
-    if unicodedata.normalize("NFKC", a).lower() == unicodedata.normalize("NFKC", t).lower():
-        return True
-    return False
+    return normalize_answer(user_input) == normalize_answer(result.target_word)
 
 
 # ===========================================================================
