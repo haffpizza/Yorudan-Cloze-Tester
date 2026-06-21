@@ -662,7 +662,8 @@ class MpvWidget(QWidget):
     def _emit_finished(self):
         self.playback_finished.emit()
 
-    def play_clip(self, video_path: str, start_ms: int, end_ms: int):
+    def play_clip(self, video_path, start_ms, end_ms, language):
+        self._player.alang = "jpn,ja" if language == "japanese" else "eng,en"
         if self._player is None:
             return
         self._player["start"] = f"{start_ms / 1000:.3f}"
@@ -1024,7 +1025,12 @@ class QuizView(QWidget):
         e = self._current_entry
         p = self._current_pair
         pad = self.history.clip_padding_ms
-        self.player.play_clip(str(p.video_path), max(0, e.start_ms - pad), e.end_ms + pad)
+        self.player.play_clip(
+            str(p.video_path),
+            max(0, e.start_ms - pad),
+            e.end_ms + pad,
+            self._language,
+        )
 
     def _on_padding_changed(self, value: int):
         self.history.clip_padding_ms = value
