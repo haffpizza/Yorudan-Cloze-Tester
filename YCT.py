@@ -36,6 +36,11 @@ def _find_libmpv() -> None:
 
 _find_libmpv()
 
+# mpv --wid embedding on Linux is X11/XCB-based.
+# Native Wayland commonly makes mpv open a separate top-level window instead.
+if sys.platform.startswith("linux") and "QT_QPA_PLATFORM" not in os.environ:
+    os.environ["QT_QPA_PLATFORM"] = "xcb"
+
 import mpv
 import regex
 from PySide6.QtCore import Qt, QTimer, Signal, Slot, QLocale
@@ -635,25 +640,39 @@ class MpvWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_NativeWindow, True)
         self.setMinimumSize(480, 270)
         self.setStyleSheet("background: #000;")
         self._player: mpv.MPV | None = None
-        self._init_player()
+        self._init_scheduled = False
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._player is None and not self._init_scheduled:
+            self._init_scheduled = True
+            QTimer.singleShot(0, self._init_player)
 
     def _init_player(self):
+        if self._player is not None:
+            return
+
         try:
+            self.createWinId()
+            wid = int(self.winId())
             self._player = mpv.MPV(
-                wid=str(int(self.winId())),
+                wid=str(wid),
+                config=False,       # avoid ~/.config/mpv/mpv.conf overriding the embedded VO
+                vo="gpu",
                 osc=False,
                 osd_level=0,
                 keep_open="yes",  # freeze on last frame instead of stopping
-                hr_seek=True,       #high-resolution seek
+                hr_seek=True,       # high-resolution seek
                 terminal=False,
                 really_quiet=True,
-                sub_auto="no", # do not auto-load any subtitles
+                sub_auto="no",     # do not auto-load any subtitles
                 sid="no",          # no active subtitle track
                 sub_visibility=False, # start subtitles hidden
-                loop=False,      # no automatic video looping
+                loop=False,          # no automatic video looping
             )
             self._player.observe_property("pause", self._on_eof)
         except Exception as e:
@@ -670,9 +689,9 @@ class MpvWidget(QWidget):
         self.playback_finished.emit()
 
     def play_clip(self, video_path, start_ms, end_ms, language):
-        self._player.alang = "jpn,ja" if language == "japanese" else "eng,en"
         if self._player is None:
             return
+        self._player.alang = "jpn,ja" if language == "japanese" else "eng,en"
         self._player["start"] = f"{start_ms / 1000:.3f}"
         self._player["end"]   = f"{end_ms / 1000:.3f}"
         self._player.play(video_path)
