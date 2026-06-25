@@ -1,7 +1,7 @@
 # Yorudan Cloze Tester
 Desktop app for quickly generating [cloze tests](https://en.wikipedia.org/wiki/Cloze_test) using any video of your choosing. Any video playable by [mpv](https://mpv.io/) is compatible, but only subtitles in .srt format are compatible (if your subtitles are not in .srt format, see note #3 below)
 ## Compatibility:
-Windows, Mac, and Linux builds are provided. If you would like to use YCT on a different platform, or if the provided build is not working on your system, it is recommended that you build the executable yourself (instructions are provided below).
+Windows and Linux builds are provided, but the Linux version is not complete yet. I also plan to provide a Mac build eventually. If you would like to use YCT on a different platform, or if the provided build is not working on your system, it is recommended that you build the executable yourself (instructions are provided below) or just run YCT.py itself.
 ## To start:
 1) Place all files in the same folder and run YCT.exe. If you have an older computer, it might take 10 or more seconds to start.
 2) Select a folder which contains video files and corresponding subtitle files. To ensure that the video and subtitle files are paired correctly, make sure that they have the same name (example: episode1.mp4 + episode1.srt). There is not a limit to the number of files that YCT can select from.
@@ -28,7 +28,7 @@ More strict than the above list, a string of text containing any of these charac
 
 In both cases, subtitles containing these characters may still be selected even if not every string of characters is eligible.
 
-## Building YCT:
+## Building YCT for Windows:
 1) Install the following libraries:
 * PySide6
 * regex
