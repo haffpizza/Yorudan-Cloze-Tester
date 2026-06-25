@@ -8,12 +8,12 @@ Optional:  spacy + en_core_web_sm  (English proper-noun detection)
 
 from __future__ import annotations
 
+import sys
 import html
 import json
 import os
 import random
 import re
-import sys
 import time
 import unicodedata
 from dataclasses import asdict, dataclass, field
@@ -38,14 +38,14 @@ _find_libmpv()
 
 import mpv
 import regex
-from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtCore import Qt, QTimer, Signal, Slot, QLocale
 from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut, QIcon
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
     QLineEdit, QMainWindow, QPushButton, QSizePolicy,
     QStatusBar, QVBoxLayout, QWidget,
 )
-
+QLocale.setDefault(QLocale.c())
 
 # ===========================================================================
 # Theme
@@ -430,8 +430,15 @@ def _tokenise_japanese(text: str) -> list[_Token]:
             _tokenise_japanese._tagger = False
             tagger = False
 
-    EXCLUDE_STRINGS = load_excluded("excluded_strings.txt", mode="line")
-    BANNED_CHARS = load_excluded("excluded_chars.txt", mode="line")
+    EXCLUDE_STRINGS = load_excluded(
+        _app_dir() / "excluded_strings.txt",
+        mode="line"
+    )
+
+    BANNED_CHARS = load_excluded(
+        _app_dir() / "excluded_chars.txt",
+        mode="line"
+    )
     
     if tagger:
         tokens = []
@@ -1243,6 +1250,8 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    import locale
+    locale.setlocale(locale.LC_NUMERIC, "C")
     app.setApplicationName("Yorudan Cloze Tester")
     app.setWindowIcon(QIcon(resource_path("assets/icon.png")))
     window = MainWindow()
