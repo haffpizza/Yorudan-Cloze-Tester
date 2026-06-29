@@ -29,26 +29,8 @@ More strict than the above list, a string of text containing any of these charac
 In both cases, subtitles containing these characters may still be selected even if not every string of characters is eligible.
 
 ## Build Instructions
-### Windows
+### Windows and Linux
 1) Install the following libraries:
-* PySide6
-* regex
-* python-mpv
-* spacy + en_core_web_sm
-* fugashi
-* unidic-lite
-2) Find the directory for unidic_lite (required for Japanese) using:
-  
-`python -c "import unidic_lite, pathlib; print(pathlib.Path(unidic_lite.__file__).parent)"`
-
-3) Then, plug the path given into the following command:
-
-`pyinstaller YCT.py --windowed --onefile --add-data "COPYPATHHERE;unidic_lite"`
-
-4) Download [libmpv-2.dll](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/) and place it next to the executable. Alternatively, you can place it in PATH, but doing so will not cause it to be built into the executable.
-
-### Linux
-1) Install the following:
 
 `pip install PySide6`
 
@@ -64,6 +46,18 @@ In both cases, subtitles containing these characters may still be selected even 
 
 `python -m spacy download en_core_web_sm`
 
+### Windows
+2) Find the directory for unidic_lite (required for Japanese) using:
+  
+`python -c "import unidic_lite, pathlib; print(pathlib.Path(unidic_lite.__file__).parent)"`
+
+3) Then, plug the path given into the following command:
+
+`pyinstaller YCT.py --windowed --onefile --add-data "COPYPATHHERE;unidic_lite"`
+
+4) Download [libmpv-2.dll](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/) and place it next to the executable. Alternatively, you can place it in PATH, but doing so will not cause it to be built into the executable.
+
+### Linux
 2) Install mpv
 
 Ubuntu/Debian:
