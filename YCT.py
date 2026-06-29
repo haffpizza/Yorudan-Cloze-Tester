@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Yorudan Cloze Tester — single-file cloze deletion testing app.
-Requires: PySide6, regex, python-mpv, libmpv-2.dll (placed next to the exe)
-Optional:  spacy + en_core_web_sm  (English proper-noun detection)
+Requires: PySide6, regex, python-mpv, libmpv-2.dll (for Windows only, placed next to the exe)
+Required for better word selection:  spacy + en_core_web_sm  (English proper-noun detection)
            fugashi + unidic-lite   (Japanese MeCab tokenisation)
 """
 
@@ -37,8 +37,9 @@ def _find_libmpv() -> None:
 _find_libmpv()
 
 # mpv --wid embedding on Linux is X11/XCB-based.
-# Native Wayland commonly makes mpv open a separate top-level window instead.
-if sys.platform.startswith("linux") and "QT_QPA_PLATFORM" not in os.environ:
+# Force Qt to use X11/XCB. Do not use setdefault here: some desktops export
+# QT_QPA_PLATFORM=wayland, and that prevents --wid embedding from working.
+if sys.platform.startswith("linux"):
     os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 import mpv
@@ -659,21 +660,44 @@ class MpvWidget(QWidget):
         try:
             self.createWinId()
             wid = int(self.winId())
-            self._player = mpv.MPV(
+            mpv_options = dict(
                 wid=str(wid),
                 config=False,       # avoid ~/.config/mpv/mpv.conf overriding the embedded VO
-                vo="gpu",
                 osc=False,
                 osd_level=0,
-                keep_open="yes",  # freeze on last frame instead of stopping
-                hr_seek=True,       # high-resolution seek
+                keep_open="yes",   # freeze on last frame instead of stopping
+                hr_seek=True,
                 terminal=False,
                 really_quiet=True,
-                sub_auto="no",     # do not auto-load any subtitles
-                sid="no",          # no active subtitle track
-                sub_visibility=False, # start subtitles hidden
+                sub_auto="no",
+                sid="no",
+                sub_visibility=False,
                 loop=False,          # no automatic video looping
             )
+
+            if sys.platform.startswith("linux"):
+                # --wid embedding on Linux is X11-only. Qt is forced to XCB above;
+                # this also forces mpv away from Wayland and into an X11 backend.
+                # Start with the robust X11 VO. Once embedding works, maybe try:
+                #   vo="gpu", gpu_context="x11egl,x11"
+                mpv_options.update(
+                    vo="x11",
+                    x11_bypass_compositor="no",
+                    x11_wid_title="no",
+                )
+            else:
+                mpv_options.update(vo="gpu")
+
+            print(
+                f"[MpvWidget] Qt platform={QApplication.platformName()} "
+                f"DISPLAY={os.environ.get('DISPLAY')} "
+                f"WAYLAND_DISPLAY={os.environ.get('WAYLAND_DISPLAY')} "
+                f"QT_QPA_PLATFORM={os.environ.get('QT_QPA_PLATFORM')} "
+                f"wid={wid}",
+                file=sys.stderr,
+            )
+
+            self._player = mpv.MPV(**mpv_options)
             self._player.observe_property("pause", self._on_eof)
         except Exception as e:
             print(f"[MpvWidget] Failed to initialise python-mpv: {e}")
@@ -757,7 +781,7 @@ class LanguageDialog(QWidget):
         lay.setContentsMargins(24, 20, 24, 20)
         lay.setSpacing(16)
 
-        lbl = QLabel("Which tokeniser should be used for this folder?")
+        lbl = QLabel("Select a language for this folder")
         lbl.setWordWrap(True)
         lbl.setAlignment(Qt.AlignCenter)
         lay.addWidget(lbl)
@@ -1005,7 +1029,7 @@ class QuizView(QWidget):
         self.load_folder(folder)
 
     def load_folder(self, folder: str):
-        # Ask user which tokeniser to use for this folder
+        # Ask user which language to use for this folder
         self._language = LanguageDialog.ask(self)
         if self._language is None:
             return  # user closed the dialog without choosing
